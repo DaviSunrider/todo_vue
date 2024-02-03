@@ -2,28 +2,62 @@
 import { reactive } from "vue";
 
 const estado = reactive({
+  filtro: "todas",
+  tarefaTemp: "",
   tarefa: [
     { titulo: "Estudar Vue", finalizada: false },
     { titulo: "Estudar JavaScript", finalizada: false },
-    { titulo: "Estudar CSS", finalizada: true },
+    { titulo: "Estudar CSS", finalizada: false },
     { titulo: "Estudar HTML", finalizada: false },
-    { titulo: "Estudar Node", finalizada: true },
+    { titulo: "Estudar Node", finalizada: false },
     { titulo: "Estudar MongoDB", finalizada: false },
-    { titulo: "Estudar Express", finalizada: true },
+    { titulo: "Estudar Express", finalizada: false },
   ],
 });
+
+const getTarefasPendentes = () => {
+  return estado.tarefa.filter((tarefa) => !tarefa.finalizada);
+};
+
+const getTarefasFinalizadas = () => {
+  return estado.tarefa.filter((tarefa) => tarefa.finalizada);
+};
+
+const getTarefasFiltradas = () => {
+  const { filtro } = estado;
+
+  switch (filtro) {
+    case "pendentes":
+      return getTarefasPendentes();
+    case "finalizadas":
+      return getTarefasFinalizadas();
+    default:
+      return estado.tarefa;
+  }
+};
+
+const cadastraTarefa = () => {
+  const tarefaNova = {
+    titulo: estado.tarefaTemp,
+    finalizada: false,
+  };
+  estado.tarefa.push(tarefaNova);
+  estado.tarefaTemp = "";
+};
 </script>
 
 <template>
   <div class="container">
     <header class="p-5 mb-4 mt-4 bg-light rounded-3">
       <h1>Minhas Tarefas</h1>
-      <p>Você possui 7 tarefas pendentes</p>
+      <p>{{ getTarefasPendentes().length }}</p>
     </header>
-    <form>
+    <form @submit.prevent="cadastraTarefa">
       <div class="row">
         <div class="col">
           <input
+            :value="estado.tarefaTemp" @change="(evento) => (estado.tarefaTemp = evento.target.value)"
+            required
             type="text"
             placeholder="Digite aqui a descrição da tarefa"
             class="form-control"
@@ -33,7 +67,10 @@ const estado = reactive({
           <button type="submit" class="btn btn-primary">Cadastrar</button>
         </div>
         <div class="col-md-2">
-          <select class="form-control">
+          <select
+            @change="(evento) => (estado.filtro = evento.target.value)"
+            class="form-control"
+          >
             <option value="todas">Todas</option>
             <option value="pendentes">Pendentes</option>
             <option value="finalizadas">Finalizadas</option>
@@ -42,8 +79,9 @@ const estado = reactive({
       </div>
     </form>
     <ul class="list-group mt-4">
-      <li class="list-group-item" v-for="tarefa in estado.tarefa">
+      <li class="list-group-item" v-for="tarefa in getTarefasFiltradas()">
         <input
+          @change="(evento) => (tarefa.finalizada = evento.target.checked)"
           :checked="tarefa.finalizada"
           :id="tarefa.titulo"
           type="checkbox"
